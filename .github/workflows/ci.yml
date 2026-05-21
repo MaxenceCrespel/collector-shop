@@ -90,8 +90,7 @@ jobs:
 
       - name: Démarrage de l'infrastructure via Docker Compose
         run: |
-          docker-compose up -d --build
-          # On laisse 10 secondes à PostgreSQL et Node pour s'initialiser pleinement
+          docker compose up -d --build
           sleep 10 
 
       - name: Installation de Siege
@@ -99,10 +98,9 @@ jobs:
 
       - name: Exécution du test de charge Siege
         run: |
-          # On teste l'accès HTTPS via le port non-privilégié configuré
-          # L'option -k (keep-alive) simule de vrais utilisateurs. On ignore la vérification stricte SSL avec un certificat auto-signé.
-          siege -c 20 -t 10s --concurrent=20 https://localhost:8443/articles
+          echo "ssl-cert = false" > ~/.siegerc
+          siege -c 20 -t 10s https://localhost:8443/articles
 
       - name: Arrêt des services
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
