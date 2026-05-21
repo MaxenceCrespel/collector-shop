@@ -75,7 +75,7 @@ jobs:
 
   Load-Testing:
     runs-on: ubuntu-latest
-    needs: Linter-and-Tests
+    needs: Docker-Build-and-Security
 
     steps:
       - name: Checkout du code
@@ -86,9 +86,14 @@ jobs:
           docker compose up -d --build
           sleep 15
 
-      - name: Exécution du test de charge Siege (Intra-Conteneur)
+      - name: Exécution du test de charge Siege (Mode Sidecar Ubuntu)
         run: |
-          docker compose exec -T app sh -c "apk add --no-cache siege --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing && mkdir -p ~/.siege && siege -c 20 -t 10s http://localhost:3000/articles"
+          APP_CONTAINER=$(docker compose ps -q app)
+          docker run --rm --network container:$APP_CONTAINER ubuntu:22.04 sh -c "\
+            apt-get update && \
+            apt-get install -y siege && \
+            mkdir -p ~/.siege && \
+            siege -c 20 -t 10s http://localhost:3000/articles"
 
       - name: Arrêt des services
         if: always()
