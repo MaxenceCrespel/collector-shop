@@ -6,19 +6,16 @@ function App() {
   const [articles, setArticles] = useState([]);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   
-  // États pour le formulaire de Login Admin
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showLoginForm, setShowLoginForm] = useState(false);
 
-  // États pour le formulaire d'ajout d'article
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
 
-  // 1. Récupération publique du catalogue
   const fetchArticles = () => {
     axios.get('/articles')
       .then(res => setArticles(res.data))
@@ -29,14 +26,13 @@ function App() {
     fetchArticles();
   }, []);
 
-  // 2. Gestion de l'authentification (Récupération du vrai JWT)
   const handleLogin = (e) => {
     e.preventDefault();
     axios.post('/login', { username, password })
       .then(res => {
         const receivedToken = res.data.token;
         setToken(receivedToken);
-        localStorage.setItem('token', receivedToken); // Persistance de la session
+        localStorage.setItem('token', receivedToken);
         setShowLoginForm(false);
         setUsername('');
         setPassword('');
@@ -48,18 +44,15 @@ function App() {
       });
   };
 
-  // 3. Déconnexion
   const handleLogout = () => {
     setToken('');
     localStorage.removeItem('token');
     setMessage("👋 Déconnexion réussie.");
   };
 
-  // 4. Soumission sécurisée vers l'API avec le Bearer Token
   const handleAddArticle = (e) => {
     e.preventDefault();
     
-    // On injecte dynamiquement le token récupéré lors du login
     const config = {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -71,7 +64,7 @@ function App() {
     axios.post('/articles', newArticle, config)
       .then(res => {
         setMessage("✅ Objet ajouté avec succès au catalogue !");
-        fetchArticles(); // Rafraîchit la liste des pièces
+        fetchArticles();
         setTitle(''); setDescription(''); setPrice(''); setCategory('');
       })
       .catch(err => {
@@ -82,7 +75,6 @@ function App() {
 
   return (
     <div className="App">
-      {/* Barre de gestion des Rôles et d'authentification */}
       <div className="role-banner">
         <span>Rôle actuel : <strong>{token ? "🔒 GESTIONNAIRE / ADMIN (JWT)" : "🌐 VISITEUR PUBLIC"}</strong></span>
         <div>
@@ -96,7 +88,6 @@ function App() {
         </div>
       </div>
 
-      {/* Formulaire de Login (Affiché uniquement si cliqué et non connecté) */}
       {showLoginForm && !token && (
         <div className="login-section">
           <h2>Connexion Sécurisée</h2>
@@ -112,7 +103,6 @@ function App() {
 
       <h1>Collector.shop — Catalogue des Collectionneurs</h1>
 
-      {/* Zone d'administration : Accessible uniquement si un token JWT existe */}
       {token && (
         <div className="admin-section">
           <h2>Ajouter une nouvelle pépite au catalogue (Protégé par cryptographie)</h2>
@@ -126,7 +116,6 @@ function App() {
         </div>
       )}
 
-      {/* Affichage du Catalogue public */}
       <div className="catalogue">
         {articles.length > 0 ? (
           articles.map(art => (

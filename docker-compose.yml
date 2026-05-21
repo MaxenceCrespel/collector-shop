@@ -8,7 +8,7 @@ services:
     volumes:
       - ./init-db/init.sql:/docker-entrypoint-initdb.d/init.sql:z
       - postgres_data:/var/lib/postgresql/data:z
-    healthcheck: # Vérifie que la DB est prête avant de lancer l'API
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d collector_db"]
       interval: 5s
       timeout: 5s
@@ -26,8 +26,8 @@ services:
   proxy:
     image: nginx:alpine
     ports:
-      - "8080:80" # On mappe le port local 8080 sur le 80 du conteneur
-      - "8443:443" # On mappe le port local 8443 sur le 443 du conteneur
+      - "8080:80"
+      - "8443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:z
       - ./nginx/server.crt:/etc/nginx/certs/server.crt:z

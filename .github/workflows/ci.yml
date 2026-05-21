@@ -72,3 +72,37 @@ jobs:
           format: 'table'
           exit-code: '0'
           severity: 'CRITICAL,HIGH'
+
+  Load-Testing:
+    runs-on: ubuntu-latest
+    needs: Linter-and-Tests
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Génération des certificats SSL pour le test
+        run: |
+          mkdir -p nginx
+          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
+            -keyout nginx/server.key -out nginx/server.crt \
+            -subj "/C=FR/O=CESI/CN=localhost"
+
+      - name: Démarrage de l'infrastructure via Docker Compose
+        run: |
+          docker-compose up -d --build
+          # On laisse 10 secondes à PostgreSQL et Node pour s'initialiser pleinement
+          sleep 10 
+
+      - name: Installation de Siege
+        run: sudo apt-get update && sudo apt-get install -y siege
+
+      - name: Exécution du test de charge Siege
+        run: |
+          # On teste l'accès HTTPS via le port non-privilégié configuré
+          # L'option -k (keep-alive) simule de vrais utilisateurs. On ignore la vérification stricte SSL avec un certificat auto-signé.
+          siege -c 20 -t 10s --concurrent=20 https://localhost:8443/articles
+
+      - name: Arrêt des services
+        if: always()
+        run: docker-compose down -v

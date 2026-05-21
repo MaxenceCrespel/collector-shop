@@ -35,18 +35,16 @@ const authMiddleware = (req, res, next) => {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded; // On stocke les infos du user dans la requête
+        req.user = decoded;
         next();
     } catch (err) {
         return res.status(403).json({ error: 'Token invalide ou expiré' });
     }
 };
 
-// Route de Login pour générer le token (Simulation d'authentification)
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
-    // Pour le POC, on simule un utilisateur admin unique
     if (username === 'admin' && password === 'collector2026') {
         const token = jwt.sign({ username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
         return res.json({ token });

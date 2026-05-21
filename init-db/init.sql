@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS articles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insertion de 20 objets collector variés
 INSERT INTO articles (title, description, price, category) VALUES
 ('Jordan 1 Retro High', 'Édition limitée 1985, état neuf.', 1200.00, 'Baskets'),
 ('Figurine Boba Fett Kenner', 'Originale 1979 sous blister.', 450.00, 'Figurines'),

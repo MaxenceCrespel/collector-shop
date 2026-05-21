@@ -107,7 +107,6 @@ h1 {
   display: inline-block;
 }
 
-/* Bannière de gestion des rôles */
 .role-banner {
   background-color: #2c3e50;
   color: white;
@@ -133,7 +132,6 @@ h1 {
   background-color: #c0392b;
 }
 
-/* Section Administration */
 .admin-section {
   background: #fff;
   border-left: 5px solid #e67e22;
