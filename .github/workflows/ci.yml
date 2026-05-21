@@ -1,0 +1,74 @@
+name: Pipeline CI/CD Collector.shop
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  Linter-and-Tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: collector_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installation des dépendances API
+        run: |
+          cd api
+          npm install
+
+      - name: Exécution des tests API
+        env:
+          DATABASE_URL: postgres://user:password@localhost:5432/collector_db
+        run: |
+          cd api
+          # On lance les tests (on va configurer la commande juste après)
+          npm test -- --passWithNoTests 
+
+      - name: Installation et Build du Client
+        run: |
+          cd client
+          npm install
+          npm run build
+
+  Docker-Build-and-Security:
+    runs-on: ubuntu-latest
+    needs: Linter-and-Tests
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Build de l'image Docker Collector
+        run: |
+          docker build -t collector-shop-app:latest .
+
+      - name: Scan de l'image avec Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'collector-shop-app:latest'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
