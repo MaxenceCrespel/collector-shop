@@ -81,28 +81,18 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Génération des certificats SSL pour le test
+      - name: Démarrage de l'infrastructure
         run: |
-          mkdir -p nginx
-          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
-            -keyout nginx/server.key -out nginx/server.crt \
-            -subj "/C=FR/O=CESI/CN=localhost"
-
-      - name: Démarrage de l'infrastructure via Docker Compose
-        run: |
+          # On démarre simplement les conteneurs
           docker compose up -d --build
-          # 🚨 On laisse 25 secondes à la machine GitHub pour allumer la base de données
-          sleep 25
+          # On laisse 15 secondes au backend pour s'allumer
+          sleep 15
 
-      - name: Installation de Siege
-        run: sudo apt-get update && sudo apt-get install -y siege
-
-      - name: Exécution du test de charge Siege
+      - name: Exécution du test de charge Siege (Intra-Conteneur)
         run: |
-          mkdir -p ~/.siege
-          echo "ssl-cert = false" > ~/.siegerc
-          echo "ssl-cert = false" > ~/.siege/siege.conf
-          siege -v -c 20 -t 10s https://localhost:8443/articles
+          # L'astuce ultime : on installe Siege DANS le conteneur de l'API (basé sur Alpine)
+          # Et on attaque directement le port 3000 local au conteneur (sans passer par le HTTPS de Nginx)
+          docker compose exec -T app sh -c "apk add --no-cache siege && siege -c 20 -t 10s http://localhost:3000/articles"
 
       - name: Arrêt des services
         if: always()
