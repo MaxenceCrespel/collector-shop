@@ -1,10 +1,10 @@
 const request = require('supertest');
 const app = require('../server');
 
-describe("Tests d''Intégration - Serveur Statique", () => {
-    it('devrait servir le fichier index.html sur la racine /', async () => {
-        const res = await request(app).get('/');
+describe("Tests d''Intégration - Healthcheck", () => {
+    it('devrait retourner un statut 200 sur la route /health', async () => {
+        const res = await request(app).get('/health');
         expect(res.statusCode).toEqual(200);
-        expect(res.headers['content-type']).stringContaining('text/html');
+        expect(res.text).toEqual('OK');
     });
 });
