@@ -99,9 +99,9 @@ jobs:
 
       - name: Exécution du test de charge Siege
         run: |
-          siege.config
-          echo "ssl-cert = false" >> ~/.siege/siege.conf
-
+          mkdir -p ~/.siege
+          echo "ssl-cert = false" > ~/.siegerc
+          echo "ssl-cert = false" > ~/.siege/siege.conf
           siege -v -c 20 -t 10s https://localhost:8443/articles
 
       - name: Arrêt des services
