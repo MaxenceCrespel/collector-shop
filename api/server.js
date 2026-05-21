@@ -7,8 +7,12 @@ require('dotenv').config();
 
 const app = express();
 
-// Sécurité et Middleware 
-app.use(helmet());
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_pour_le_cube';
+
+app.use(helmet({
+    contentSecurityPolicy: false,
+}));
 app.use(cors());
 app.use(express.json());
 
@@ -22,10 +26,39 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Non autorisé — Token manquant' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded; // On stocke les infos du user dans la requête
+        next();
+    } catch (err) {
+        return res.status(403).json({ error: 'Token invalide ou expiré' });
+    }
+};
+
+// Route de Login pour générer le token (Simulation d'authentification)
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    // Pour le POC, on simule un utilisateur admin unique
+    if (username === 'admin' && password === 'collector2026') {
+        const token = jwt.sign({ username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ token });
+    }
+
+    res.status(401).json({ error: 'Identifiants invalides' });
+});
+
 app.get('/articles', async (req, res) => {
     const start = Date.now();
     try {
-        const result = await pool.query('SELECT * FROM articles');
+        const result = await pool.query('SELECT * FROM articles ORDER BY id DESC');
 
         const duration = Date.now() - start;
         console.log(`[INFO] Requête catalogue traitée en ${duration}ms`);
@@ -36,11 +69,27 @@ app.get('/articles', async (req, res) => {
     }
 });
 
+app.post('/articles', authMiddleware, async (req, res) => {
+    const { title, description, price, category } = req.body;
+    try {
+        const result = await pool.query(
+            'INSERT INTO articles (title, description, price, category) VALUES ($1, $2, $3, $4) RETURNING *',
+            [title, description, price, category]
+        );
+        res.status(201).json({ message: "Objet collector ajouté avec succès", article: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: "Erreur serveur lors de l'ajout", detail: err.message });
+    }
+});
+
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Serveur Collector démarré sur le port ${PORT}`);
-});
+
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`Serveur Collector démarré sur le port ${PORT}`);
+    });
+}
 
 module.exports = app;
