@@ -152,6 +152,19 @@ jobs:
           name: sbom-collector-app
           path: sbom.spdx.json
 
+  IaC-Security-Checkov:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Scan de l'Infrastructure (Dockerfile & Compose)
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,dockercompose
+          soft_fail: true
+
   Load-Testing:
     runs-on: ubuntu-latest
     needs: Docker-Build-and-Security
