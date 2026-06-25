@@ -194,3 +194,19 @@ jobs:
       - name: Arrêt des services
         if: always()
         run: docker compose down -v
+
+  DAST-OWASP-ZAP:
+    runs-on: ubuntu-latest
+    needs: Docker-Build-and-Security
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+      - name: Démarrage de l'infrastructure
+        run: |
+          docker compose up -d --build
+          sleep 15
+      - name: 🧪 Attaque dynamique (OWASP ZAP)
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000'
+          fail_action: false
