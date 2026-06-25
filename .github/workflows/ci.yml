@@ -104,7 +104,7 @@ jobs:
         run: |
           cd client
           npm install
-          npm audit --audit-level=high || true
+          npm audit --audit-level=high
 
 
   Docker-Build-and-Security:
