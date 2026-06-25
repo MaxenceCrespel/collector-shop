@@ -162,8 +162,15 @@ jobs:
         uses: bridgecrewio/checkov-action@master
         with:
           directory: .
-          framework: dockerfile,dockercompose
-          soft_fail: true
+          framework: dockerfile,yaml
+          output_format: sarif
+          soft_fail: true 
+
+      - name: Sauvegarde du rapport Checkov
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-report
+          path: results.sarif
 
   Load-Testing:
     runs-on: ubuntu-latest
