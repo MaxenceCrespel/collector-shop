@@ -31,7 +31,7 @@ jobs:
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Installation des dépendances API
         run: |
           cd api
@@ -94,15 +94,18 @@ jobs:
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Installation des dépendances API
+          node-version: 22
+      - name: Audit des dépendances API (Backend)
         run: |
           cd api
           npm install
-      - name: Audit des dépendances (npm audit)
-        run: |
-          cd api
           npm audit --audit-level=high
+      - name: Audit des dépendances Client (Frontend)
+        run: |
+          cd client
+          npm install
+          npm audit --audit-level=high || true
+
 
   Docker-Build-and-Security:
     runs-on: ubuntu-latest
