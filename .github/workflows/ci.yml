@@ -8,6 +8,7 @@ permissions:
   security-events: write
   contents: read
   actions: read
+  issues: write
 jobs:
   Linter-and-Tests:
     runs-on: ubuntu-latest
