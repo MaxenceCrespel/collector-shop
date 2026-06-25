@@ -1,15 +1,12 @@
 name: Pipeline CI/CD Collector.shop
-
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
-
 jobs:
   Linter-and-Tests:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:15-alpine
@@ -24,47 +21,51 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
-
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Installation des dépendances API
         run: |
           cd api
           npm install
-
       - name: Exécution des tests API
         env:
           DATABASE_URL: postgres://user:password@localhost:5432/collector_db
         run: |
           cd api
-          # On lance les tests (on va configurer la commande juste après)
           npm test -- --passWithNoTests
-
       - name: Installation et Build du Client
         run: |
           cd client
           npm install
           npm run build
 
-  Docker-Build-and-Security:
+  Secret-Scanning:
     runs-on: ubuntu-latest
-    needs: Linter-and-Tests
-
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_SUMMARY: true
 
+  Docker-Build-and-Security:
+    runs-on: ubuntu-latest
+    needs: Linter-and-Tests
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
       - name: Build de l'image Docker Collector
         run: |
           docker build -t collector-shop-app:latest .
-
       - name: Scan de l'image avec Trivy
         uses: aquasecurity/trivy-action@master
         with:
@@ -76,16 +77,13 @@ jobs:
   Load-Testing:
     runs-on: ubuntu-latest
     needs: Docker-Build-and-Security
-
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
-
       - name: Démarrage de l'infrastructure
         run: |
           docker compose up -d --build
           sleep 15
-
       - name: Exécution du test de charge Siege (Mode Sidecar Ubuntu)
         run: |
           APP_CONTAINER=$(docker compose ps -q app)
@@ -94,7 +92,7 @@ jobs:
             apt-get install -y siege && \
             mkdir -p ~/.siege && \
             siege -c 20 -t 10s http://localhost:3000/articles"
-
       - name: Arrêt des services
         if: always()
         run: docker compose down -v
+        
