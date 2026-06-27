@@ -1,0 +1,5 @@
+[allowlist]
+description = "On autorise la fausse cle SSL de developpement Nginx"
+paths = [
+    '''nginx/server\.key'''
+]
