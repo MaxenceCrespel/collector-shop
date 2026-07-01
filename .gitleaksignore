@@ -1,5 +1,1 @@
-[allowlist]
-description = "On autorise la fausse cle SSL de developpement Nginx"
-paths = [
-    '''nginx/server\.key'''
-]
+8348c82cfe37b6090d22c27f894fde4c506e6d85:nginx/server.key:private-key:1
