@@ -42,6 +42,16 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
+const promClient = require('prom-client');
+
+const collectDefaultMetrics = promClient.collectDefaultMetrics;
+collectDefaultMetrics({ timeout: 5000 });
+
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', promClient.register.contentType);
+    res.end(await promClient.register.metrics());
+});
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
