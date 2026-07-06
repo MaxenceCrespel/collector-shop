@@ -22,7 +22,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🐳 Configuration du nom de l'image
+      - name: Configuration du nom de l'image
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_TAG=ghcr.io/$REPO_LOWER:latest" >> $GITHUB_ENV
