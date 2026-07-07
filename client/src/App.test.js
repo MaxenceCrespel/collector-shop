@@ -26,10 +26,10 @@ describe('Collector.shop - Test d\'Intégration Frontend', () => {
     render(<App />);
 
     expect(screen.getByText(/La marketplace des objets qui ont une histoire/i)).toBeInTheDocument();
-    
+
     fireEvent.change(screen.getByPlaceholderText('Votre identifiant'), { target: { value: 'sneakerhead75' } });
     fireEvent.change(screen.getByPlaceholderText('Votre mot de passe'), { target: { value: 'collector2026' } });
-    
+
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     await waitFor(() => {
@@ -52,6 +52,7 @@ describe('Collector.shop - Test d\'Intégration Frontend', () => {
     fireEvent.click(cartButton);
 
     expect(screen.getByText('Mon panier')).toBeInTheDocument();
-    expect(screen.getByText(/120.*€/)).toBeInTheDocument();
+    const prices = screen.getAllByText(/120.*€/);
+    expect(prices.length).toBe(3);
   });
 });
