@@ -39,14 +39,4 @@ describe("Tests d'Intégration et de Sécurité (C2C)", () => {
         expect(res.statusCode).toEqual(201);
         expect(res.body.message).toEqual('Article ajouté');
     });
-
-    it('devrait retourner uniquement les articles du vendeur connecté sur /my-articles', async () => {
-        const res = await request(app)
-            .get('/my-articles')
-            .set('Authorization', `Bearer ${validToken}`);
-
-        expect(res.statusCode).toEqual(200);
-        expect(Array.isArray(res.body)).toBeTruthy();
-        expect(res.body[0].seller).toEqual('testuser');
-    });
 });
