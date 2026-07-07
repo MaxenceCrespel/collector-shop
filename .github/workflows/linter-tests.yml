@@ -23,26 +23,27 @@ jobs:
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
-        
+
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          
+
       - name: Installation des dépendances API
         run: |
           cd api
           npm install
-          
+
       - name: Exécution des tests API
         env:
           DATABASE_URL: postgres://user:password@localhost:5432/collector_db
         run: |
           cd api
           npm test -- --passWithNoTests
-          
-      - name: Installation et Build du Client
+
+      - name: Installation, Tests et Build du Client
         run: |
           cd client
           npm install
+          npm test -- --watchAll=false
           npm run build
