@@ -36,7 +36,6 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-// Métriques Prometheus
 const promClient = require('prom-client');
 promClient.collectDefaultMetrics({ timeout: 5000 });
 app.get('/metrics', async (req, res) => {
@@ -44,7 +43,6 @@ app.get('/metrics', async (req, res) => {
     res.end(await promClient.register.metrics());
 });
 
-// ── Inscription ──────────────────────────────────────────────────────────────
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
@@ -77,7 +75,6 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// ── Connexion ────────────────────────────────────────────────────────────────
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -104,7 +101,6 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// ── Articles ─────────────────────────────────────────────────────────────────
 app.get('/articles', async (req, res) => {
     const start = Date.now();
     try {
@@ -132,7 +128,6 @@ app.post('/articles', authMiddleware, async (req, res) => {
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
-// ── Seed comptes de démo ─────────────────────────────────────────────────────
 async function seedDemoUsers() {
     const demoUsers = [
         'sneakerhead75', 'starwars_collector', 'retro_passion',
@@ -159,10 +154,10 @@ async function seedDemoUsers() {
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, async () => {
-    console.log(`Serveur Collector démarré sur le port ${PORT}`);
-    await seedDemoUsers();
-  });
+    app.listen(PORT, async () => {
+        console.log(`Serveur Collector démarré sur le port ${PORT}`);
+        await seedDemoUsers();
+    });
 }
 
 module.exports = app;

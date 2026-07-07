@@ -37,7 +37,7 @@ describe("Tests d'Intégration et de Sécurité (C2C)", () => {
             .send({ title: 'Montre Vintage', description: 'Rare', price: 200, category: 'Horlogerie' });
 
         expect(res.statusCode).toEqual(201);
-        expect(res.body.message).toEqual('Annonce publiée');
+        expect(res.body.message).toEqual('Article ajouté');
     });
 
     it('devrait retourner uniquement les articles du vendeur connecté sur /my-articles', async () => {
