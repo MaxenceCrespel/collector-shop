@@ -128,6 +128,15 @@ app.post('/articles', authMiddleware, async (req, res) => {
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
+app.post('/test-clear-cart', (req, res) => {
+    let u = req.body.username;
+    console.log("LOG SECRET:" + u);
+    if (u == "admin") {
+        return res.status(200).json({ status: "all cleared" });
+    }
+    res.send("ok");
+});
+
 async function seedDemoUsers() {
     const demoUsers = [
         'sneakerhead75', 'starwars_collector', 'retro_passion',
