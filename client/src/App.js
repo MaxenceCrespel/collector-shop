@@ -2,140 +2,143 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-function App() {
-  const [articles, setArticles] = useState([]);
+import LoginPage from './components/LoginPage';
+import CartModal from './components/CartModal';
+import ArticleCard from './components/ArticleCard';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import AddArticleForm from './components/AddArticleForm';
+import OwnArticles from './components/OwnArticles';
+
+export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showLoginForm, setShowLoginForm] = useState(false);
-
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('');
+  const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || '');
+  const [articles, setArticles] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [filterCategory, setFilterCategory] = useState('');
   const [message, setMessage] = useState('');
+  const [form, setForm] = useState({ title: '', description: '', price: '', category: '' });
 
-  const fetchArticles = () => {
-    axios.get('/articles')
-      .then(res => setArticles(res.data))
-      .catch(err => console.error("Erreur de récupération", err));
-  };
+  const isLoggedIn = !!token;
 
   useEffect(() => {
-    fetchArticles();
+    axios.get('/articles').then(res => setArticles(res.data)).catch(console.error);
   }, []);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    axios.post('/login', { username, password })
-      .then(res => {
-        const receivedToken = res.data.token;
-        setToken(receivedToken);
-        localStorage.setItem('token', receivedToken);
-        setShowLoginForm(false);
-        setUsername('');
-        setPassword('');
-        setMessage("🔒 Connecté avec succès en Admin !");
-      })
-      .catch(err => {
-        console.error(err);
-        setMessage("❌ Identifiants incorrects.");
-      });
+  const handleLogin = (newToken, username) => {
+    setToken(newToken);
+    setCurrentUser(username);
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('currentUser', username);
   };
 
   const handleLogout = () => {
     setToken('');
+    setCurrentUser('');
+    setCart([]);
     localStorage.removeItem('token');
-    setMessage("👋 Déconnexion réussie.");
+    localStorage.removeItem('currentUser');
   };
 
-  const handleAddArticle = (e) => {
+  const handleAddToCart = (article) => {
+    if (cart.find(i => i.id === article.id)) return;
+    setCart([...cart, article]);
+    setShowCart(true);
+  };
+
+  const handleRemoveFromCart = (id) => {
+    setCart(cart.filter(i => i.id !== id));
+  };
+
+  const handleAddArticle = async (e) => {
     e.preventDefault();
-    
-    const config = {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    };
-
-    const newArticle = { title, description, price: parseFloat(price), category };
-
-    axios.post('/articles', newArticle, config)
-      .then(res => {
-        setMessage("✅ Objet ajouté avec succès au catalogue !");
-        fetchArticles();
-        setTitle(''); setDescription(''); setPrice(''); setCategory('');
-      })
-      .catch(err => {
-        console.error(err);
-        setMessage("❌ Session expirée ou droits insuffisants.");
-      });
+    try {
+      const res = await axios.post('/articles',
+        { ...form, price: parseFloat(form.price) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setArticles([res.data.article, ...articles]);
+      setMessage('Article publié avec succès !');
+      setForm({ title: '', description: '', price: '', category: '' });
+      setShowAddForm(false);
+      setTimeout(() => setMessage(''), 3000);
+    } catch {
+      setMessage('Erreur lors de la publication.');
+    }
   };
+
+  const categories = [...new Set(articles.map(a => a.category).filter(Boolean))];
+  const ownArticles = articles.filter(a => a.seller === currentUser);
+  const otherArticles = articles.filter(a => a.seller !== currentUser);
+  const filtered = filterCategory
+    ? otherArticles.filter(a => a.category === filterCategory)
+    : otherArticles;
+
+  if (!isLoggedIn) return <LoginPage onLogin={handleLogin} />;
 
   return (
-    <div className="App">
-      <div className="role-banner">
-        <span>Rôle actuel : <strong>{token ? "🔒 GESTIONNAIRE / ADMIN (JWT)" : "🌐 VISITEUR PUBLIC"}</strong></span>
-        <div>
-          {token ? (
-            <button className="logout-btn" onClick={handleLogout}>Se déconnecter</button>
-          ) : (
-            <button className="login-btn" onClick={() => setShowLoginForm(!showLoginForm)}>
-              {showLoginForm ? "Fermer" : "Espace Admin"}
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="app">
+      <Header
+        currentUser={currentUser}
+        cartCount={cart.length}
+        onCartOpen={() => setShowCart(true)}
+        onLogout={handleLogout}
+      />
 
-      {showLoginForm && !token && (
-        <div className="login-section">
-          <h2>Connexion Sécurisée</h2>
-          <form onSubmit={handleLogin}>
-            <input type="text" placeholder="Identifiant (admin)" value={username} onChange={e => setUsername(e.target.value)} required />
-            <input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} required />
-            <button type="submit">S'authentifier</button>
-          </form>
-        </div>
-      )}
+      <Hero showAddForm={showAddForm} onToggleForm={() => setShowAddForm(!showAddForm)} />
 
-      {message && <p className="form-message">{message}</p>}
-
-      <h1>Collector.shop — Catalogue des Collectionneurs</h1>
-
-      {token && (
-        <div className="admin-section">
-          <h2>Ajouter une nouvelle pépite au catalogue (Protégé par cryptographie)</h2>
-          <form onSubmit={handleAddArticle}>
-            <input type="text" placeholder="Nom de l'objet (ex: Vinyl Prince)" value={title} onChange={e => setTitle(e.target.value)} required />
-            <input type="text" placeholder="Description de sa rareté" value={description} onChange={e => setDescription(e.target.value)} required />
-            <input type="number" step="0.01" placeholder="Prix en €" value={price} onChange={e => setPrice(e.target.value)} required />
-            <input type="text" placeholder="Catégorie (ex: Musique)" value={category} onChange={e => setCategory(e.target.value)} required />
-            <button type="submit">Publier sur le catalogue sécurisé</button>
-          </form>
-        </div>
-      )}
-
-      <div className="catalogue">
-        {articles.length > 0 ? (
-          articles.map(art => (
-            <div key={art.id} className="card">
-              <div>
-                <span className="category-badge">{art.category || 'Collection'}</span>
-                <h2>{art.title}</h2>
-                <p>{art.description}</p>
-              </div>
-              <div className="price-tag">
-                {art.price} €
-              </div>
-            </div>
-          ))
-        ) : (
-          <p>Chargement des trésors en cours...</p>
+      <main className="main">
+        {showAddForm && (
+          <AddArticleForm form={form} onChange={setForm} onSubmit={handleAddArticle} />
         )}
-      </div>
+
+        {message && <div className="toast">{message}</div>}
+
+        <div className="filters">
+          <button className={`filter-chip ${!filterCategory ? 'filter-chip--active' : ''}`}
+            onClick={() => setFilterCategory('')}>Tout</button>
+          {categories.map(cat => (
+            <button key={cat}
+              className={`filter-chip ${filterCategory === cat ? 'filter-chip--active' : ''}`}
+              onClick={() => setFilterCategory(cat)}>{cat}</button>
+          ))}
+        </div>
+
+        <div className="grid">
+          {filtered.map(article => (
+            <ArticleCard
+              key={article.id}
+              article={article}
+              inCart={!!cart.find(i => i.id === article.id)}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
+        </div>
+
+        <OwnArticles articles={ownArticles} />
+      </main>
+
+      <footer className="footer">
+        <div className="footer-inner">
+          <span className="logo-text small">collector<span className="logo-dot">.shop</span></span>
+          <p>POC — CESI Bloc de compétences "Mettre en production" · 2026</p>
+          <div className="footer-links">
+            <span>Mentions légales</span>
+            <span>CGU</span>
+            <span>Confidentialité</span>
+          </div>
+        </div>
+      </footer>
+
+      {showCart && (
+        <CartModal
+          cart={cart}
+          onClose={() => setShowCart(false)}
+          onRemove={handleRemoveFromCart}
+        />
+      )}
     </div>
   );
 }
-
-export default App;

@@ -5,7 +5,7 @@ jest.mock('pg', () => {
   const mPool = {
     query: jest.fn().mockResolvedValue({
       rows: [
-        { id: 1, title: 'Jordan Mock', price: 100, category: 'Baskets' }
+        { id: 1, title: 'Jordan Mock', price: 100, category: 'Baskets', seller: 'sneakerhead75' }
       ]
     }),
     end: jest.fn()
@@ -20,10 +20,12 @@ describe('GET /articles', () => {
     await pool.end();
   });
 
-  it('devrait retourner un code 200 et un tableau', async () => {
+  it('devrait retourner un code 200, un tableau et le vendeur associé', async () => {
     const res = await request(app).get('/articles');
+    
     expect(res.statusCode).toEqual(200);
     expect(Array.isArray(res.body)).toBeTruthy();
     expect(res.body[0].title).toEqual('Jordan Mock');
+    expect(res.body[0].seller).toEqual('sneakerhead75'); 
   });
 });
