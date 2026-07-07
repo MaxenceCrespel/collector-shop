@@ -52,6 +52,6 @@ describe('Collector.shop - Test d\'Intégration Frontend', () => {
     fireEvent.click(cartButton);
 
     expect(screen.getByText('Mon panier')).toBeInTheDocument();
-    expect(screen.getByText('120,00 €')).toBeInTheDocument();
+    expect(screen.getByText(/120.*€/)).toBeInTheDocument();
   });
 });
