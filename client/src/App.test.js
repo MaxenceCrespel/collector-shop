@@ -4,39 +4,54 @@ import axios from 'axios';
 
 jest.mock('axios');
 
-describe('Collector.shop - Application React', () => {
+describe('Collector.shop - Test d\'Intégration Frontend', () => {
   beforeEach(() => {
     localStorage.clear();
     axios.get.mockClear();
     axios.post.mockClear();
   });
 
-  it('devrait rediriger vers le login puis afficher le catalogue après connexion', async () => {
+  it('devrait permettre de se connecter, voir le catalogue et ajouter au panier', async () => {
     axios.get.mockResolvedValueOnce({
       data: [
-        { id: 1, title: 'Walkman Sony', price: '50.00', category: 'Audio', seller: 'autre_vendeur' },
-        { id: 2, title: 'Carte Dracaufeu', price: '200.00', category: 'Cartes', seller: 'moi_meme' }
+        { id: 1, title: 'Super Nintendo', price: '120.00', category: 'Jeux Vidéo', seller: 'retro_passion', description: 'En boîte' },
+        { id: 2, title: 'Figurine Batman', price: '45.00', category: 'Figurines', seller: 'sneakerhead75', description: 'Neuve' }
       ]
     });
 
     axios.post.mockResolvedValueOnce({
-      data: { token: 'fake-jwt-token', username: 'moi_meme' }
+      data: { token: 'mock-jwt-token', username: 'sneakerhead75' }
     });
 
     render(<App />);
 
-    const loginInput = screen.getByRole('textbox'); 
-    fireEvent.change(loginInput, { target: { value: 'moi_meme' } });
+    expect(screen.getByText(/La marketplace des objets qui ont une histoire/i)).toBeInTheDocument();
     
-    const loginButton = screen.getByRole('button', { name: /connecter|valider/i });
-    fireEvent.click(loginButton);
+    fireEvent.change(screen.getByPlaceholderText('Votre identifiant'), { target: { value: 'sneakerhead75' } });
+    fireEvent.change(screen.getByPlaceholderText('Votre mot de passe'), { target: { value: 'collector2026' } });
+    
+    fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     await waitFor(() => {
-      expect(screen.getByText('👤 moi_meme')).toBeInTheDocument();
+      expect(screen.getByText('Achetez et vendez des objets de collection')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Walkman Sony')).toBeInTheDocument();
+    expect(screen.getByText('Super Nintendo')).toBeInTheDocument();
+    const btnAddCart = screen.getByRole('button', { name: 'Ajouter' });
+    expect(btnAddCart).toBeInTheDocument();
 
-    expect(screen.getByText('Carte Dracaufeu')).toBeInTheDocument();
+    expect(screen.getByText('Mes annonces en ligne')).toBeInTheDocument();
+    expect(screen.getByText('Figurine Batman')).toBeInTheDocument();
+
+    fireEvent.click(btnAddCart);
+
+    const cartBadge = screen.getByText('1', { selector: '.cart-badge' });
+    expect(cartBadge).toBeInTheDocument();
+
+    const cartButton = cartBadge.closest('button');
+    fireEvent.click(cartButton);
+
+    expect(screen.getByText('Mon panier')).toBeInTheDocument();
+    expect(screen.getByText('120,00 €')).toBeInTheDocument();
   });
 });
