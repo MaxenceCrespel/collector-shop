@@ -1,4 +1,4 @@
-name: Reusable Docker Build & Scan
+name: Docker Build & Scan
 
 on:
   workflow_call:
