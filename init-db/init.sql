@@ -22,6 +22,9 @@ CREATE TABLE
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+ALTER TABLE articles
+ADD COLUMN IF NOT EXISTS condition VARCHAR(30) DEFAULT 'Non spécifié';
+
 INSERT INTO
     articles (
         title,
