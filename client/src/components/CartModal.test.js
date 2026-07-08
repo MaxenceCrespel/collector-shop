@@ -25,7 +25,8 @@ describe('CartModal Component', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
         expect(mockOnRemove).toHaveBeenCalledWith(1);
 
-        fireEvent.click(screen.getByRole('button', { name: 'fermer' }) || screen.getAllByRole('button')[0]);
+        const closeBtn = document.querySelector('.btn-icon');
+        fireEvent.click(closeBtn);
         expect(mockOnClose).toHaveBeenCalled();
     });
 
