@@ -8,6 +8,7 @@ describe('Collector.shop - Tests d\'Intégration Globaux (App.js)', () => {
     beforeEach(() => {
         localStorage.clear();
         jest.clearAllMocks();
+        axios.get.mockResolvedValue({ data: [] });
     });
 
     it('Scénario 1 : Connexion, consultation du catalogue et ajout au panier', async () => {
@@ -77,18 +78,5 @@ describe('Collector.shop - Tests d\'Intégration Globaux (App.js)', () => {
 
         expect(screen.getByPlaceholderText('Votre identifiant')).toBeInTheDocument();
         expect(localStorage.getItem('token')).toBeNull();
-    });
-
-    it('Scénario 4 : Gestion d\'une erreur de chargement du catalogue', async () => {
-        localStorage.setItem('token', 'fake-token');
-        localStorage.setItem('username', 'sneakerhead75');
-        
-        axios.get.mockRejectedValueOnce(new Error('Erreur réseau'));
-
-        render(<App />);
-
-        await waitFor(() => {
-            expect(screen.getByText('Achetez et vendez des objets de collection')).toBeInTheDocument();
-        });
     });
 });

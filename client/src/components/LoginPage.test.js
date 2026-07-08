@@ -1,58 +1,43 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import App from './App';
+import LoginPage from './LoginPage';
 import axios from 'axios';
 
 jest.mock('axios');
 
-describe('Collector.shop - Test d\'Intégration Frontend', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    axios.get.mockClear();
-    axios.post.mockClear();
-  });
+describe('LoginPage Component', () => {
+    const mockOnLogin = jest.fn();
 
-  it('devrait permettre de se connecter, voir le catalogue et ajouter au panier', async () => {
-    axios.get.mockResolvedValueOnce({
-      data: [
-        { id: 1, title: 'Super Nintendo', price: '120.00', category: 'Jeux Vidéo', seller: 'retro_passion', description: 'En boîte' },
-        { id: 2, title: 'Figurine Batman', price: '45.00', category: 'Figurines', seller: 'sneakerhead75', description: 'Neuve' }
-      ]
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    axios.post.mockResolvedValueOnce({
-      data: { token: 'mock-jwt-token', username: 'sneakerhead75' }
+    it('affiche des erreurs de validation en mode inscription', async () => {
+        render(<LoginPage onLogin={mockOnLogin} />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Inscription' }));
+
+        fireEvent.change(screen.getByPlaceholderText('Votre identifiant'), { target: { value: 'user' } });
+        fireEvent.change(screen.getByPlaceholderText('Minimum 6 caractères'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByPlaceholderText('Répétez votre mot de passe'), { target: { value: 'different' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Créer mon compte' }));
+
+        expect(screen.getByText('Les mots de passe ne correspondent pas.')).toBeInTheDocument();
     });
 
-    render(<App />);
+    it('affiche une erreur API (ex: 401 Unauthorized)', async () => {
+        axios.post.mockRejectedValueOnce({
+            response: { data: { error: 'Identifiants invalides' } }
+        });
 
-    expect(screen.getByText(/La marketplace des objets qui ont une histoire/i)).toBeInTheDocument();
+        render(<LoginPage onLogin={mockOnLogin} />);
 
-    fireEvent.change(screen.getByPlaceholderText('Votre identifiant'), { target: { value: 'sneakerhead75' } });
-    fireEvent.change(screen.getByPlaceholderText('Votre mot de passe'), { target: { value: 'collector2026' } });
+        fireEvent.change(screen.getByPlaceholderText('Votre identifiant'), { target: { value: 'user' } });
+        fireEvent.change(screen.getByPlaceholderText('Votre mot de passe'), { target: { value: 'wrongpass' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Achetez et vendez des objets de collection')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Identifiants invalides')).toBeInTheDocument();
+        });
+        expect(mockOnLogin).not.toHaveBeenCalled();
     });
-
-    expect(screen.getByText('Super Nintendo')).toBeInTheDocument();
-    const btnAddCart = screen.getByRole('button', { name: 'Ajouter' });
-    expect(btnAddCart).toBeInTheDocument();
-
-    expect(screen.getByText('Mes annonces en ligne')).toBeInTheDocument();
-    expect(screen.getByText('Figurine Batman')).toBeInTheDocument();
-
-    fireEvent.click(btnAddCart);
-
-    const cartBadge = screen.getByText('1', { selector: '.cart-badge' });
-    expect(cartBadge).toBeInTheDocument();
-
-    const cartButton = cartBadge.closest('button');
-    fireEvent.click(cartButton);
-
-    expect(screen.getByText('Mon panier')).toBeInTheDocument();
-    const prices = screen.getAllByText(/120.*€/);
-    expect(prices.length).toBe(3);
-  });
 });
