@@ -49,7 +49,7 @@ jobs:
 
   E2E-Cypress:
     needs: Docker-Build-and-Security
-    uses: ./.github/workflows/job-e2e-cypress.yml
+    uses: ./.github/workflows/e2e-cypress.yml
 
   Deploy-Production:
     needs: [Load-Testing, DAST-OWASP-ZAP, E2E-Cypress]
