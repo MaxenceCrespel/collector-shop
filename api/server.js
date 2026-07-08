@@ -131,6 +131,10 @@ app.get('/articles', async (req, res) => {
 
 app.post('/articles', authMiddleware, async (req, res) => {
     const { title, description, price, category, condition } = req.body;
+    const allowedConditions = ['Neuf', 'Très bon état', 'Usé', 'Non spécifié'];
+    if (condition && !allowedConditions.includes(condition)) {
+        return res.status(400).json({ error: "L'état spécifié pour l'objet est invalide" });
+    }
     const articleCondition = condition || 'Non spécifié';
     const seller = req.user.username;
     try {

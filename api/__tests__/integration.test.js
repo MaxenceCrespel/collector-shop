@@ -64,6 +64,22 @@ describe("Tests d'Intégration et de Sécurité (C2C)", () => {
             expect(res.body.article.condition).toEqual('Très bon état');
         });
 
+        it('devrait rejeter (400) la création si la condition de l\'objet est invalide', async () => {
+            const res = await request(app)
+                .post('/articles')
+                .set('Authorization', `Bearer ${validToken}`)
+                .send({
+                    title: 'Objet Suspect',
+                    description: 'Test',
+                    price: 50,
+                    category: 'Divers',
+                    condition: 'Complètement Détruit (Texte beaucoup trop long pour tester le VARCHAR)'
+                });
+
+            expect(res.statusCode).toEqual(400);
+            expect(res.body.error).toMatch(/L'état spécifié/);
+        });
+
         it('devrait gérer proprement un crash de la DB sur POST /articles (500)', async () => {
             pool.query.mockRejectedValueOnce(new Error('Timeout DB'));
 
