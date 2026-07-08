@@ -21,7 +21,8 @@ jobs:
 
   Secret-Scanning:
     uses: ./.github/workflows/secret-scan.yml
-    secrets: inherit
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   SAST-Semgrep:
     needs: Linter-and-Tests
@@ -37,7 +38,9 @@ jobs:
   Docker-Build-and-Security:
     needs: Linter-and-Tests
     uses: ./.github/workflows/docker-build.yml
-    secrets: inherit
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
   Load-Testing:
     needs: Docker-Build-and-Security
@@ -55,4 +58,5 @@ jobs:
     needs: [Load-Testing, DAST-OWASP-ZAP, E2E-Cypress]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     uses: ./.github/workflows/deploy.yml
-    secrets: inherit
+    secrets:
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
