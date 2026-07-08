@@ -21,8 +21,6 @@ jobs:
 
   Secret-Scanning:
     uses: ./.github/workflows/secret-scan.yml
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   SAST-Semgrep:
     needs: Linter-and-Tests
