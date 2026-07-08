@@ -39,11 +39,20 @@ jobs:
           DATABASE_URL: postgres://user:password@localhost:5432/collector_db
         run: |
           cd api
-          npm test -- --passWithNoTests
+          npm test -- --passWithNoTests --coverage
 
       - name: Installation, Tests et Build du Client
         run: |
           cd client
           npm install
-          npm test -- --watchAll=false
+          npm test -- --watchAll=false --coverage
           npm run build
+
+      - name: Sauvegarde des rapports de couverture
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-coverage-reports
+          path: |
+            api/coverage/lcov-report/
+            client/coverage/lcov-report/
