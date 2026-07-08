@@ -1,0 +1,33 @@
+name: E2E Cypress Tests
+
+on:
+  workflow_call:
+
+jobs:
+  Cypress-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Démarrage de l'infrastructure Docker (DB + API + Front)
+        run: |
+          docker compose up -d --build
+          sleep 15
+
+      - name: Exécution des tests Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          wait-on: "http://localhost:3000"
+          wait-on-timeout: 60
+
+      - name: Sauvegarde de la vidéo en cas d'échec
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-video
+          path: cypress/videos
+
+      - name: Extinction de l'infrastructure
+        if: always()
+        run: docker compose down -v

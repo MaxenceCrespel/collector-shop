@@ -22,10 +22,10 @@ describe('GET /articles', () => {
 
   it('devrait retourner un code 200, un tableau et le vendeur associé', async () => {
     const res = await request(app).get('/articles');
-    
+
     expect(res.statusCode).toEqual(200);
     expect(Array.isArray(res.body)).toBeTruthy();
     expect(res.body[0].title).toEqual('Jordan Mock');
-    expect(res.body[0].seller).toEqual('sneakerhead75'); 
+    expect(res.body[0].seller).toEqual('sneakerhead75');
   });
 });

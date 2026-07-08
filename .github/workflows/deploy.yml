@@ -9,10 +9,10 @@ jobs:
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
-        
+
       - name: Déploiement Continu via SSH sur le VPS
         uses: appleboy/ssh-action@v1
-        continue-on-error: true 
+        continue-on-error: true
         with:
           host: ${{ secrets.PRODUCTION_SSH_HOST || '127.0.0.1' }}
           username: ${{ secrets.PRODUCTION_SSH_USER || 'root' }}
