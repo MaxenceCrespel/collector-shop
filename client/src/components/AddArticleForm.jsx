@@ -21,6 +21,7 @@ export default function AddArticleForm({ form, onChange, onSubmit }) {
                     <div className="field-group">
                         <label htmlFor="article-condition">État de l'objet</label>
                         <select
+                            id="article-condition"
                             value={form.condition || ''}
                             onChange={e => onChange({ ...form, condition: e.target.value })}
                             required
