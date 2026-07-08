@@ -36,9 +36,6 @@ jobs:
   Docker-Build-and-Security:
     needs: Linter-and-Tests
     uses: ./.github/workflows/docker-build.yml
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
   Load-Testing:
     needs: Docker-Build-and-Security
@@ -56,5 +53,3 @@ jobs:
     needs: [Load-Testing, DAST-OWASP-ZAP, E2E-Cypress]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     uses: ./.github/workflows/deploy.yml
-    secrets:
-      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
