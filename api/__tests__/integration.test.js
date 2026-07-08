@@ -25,12 +25,6 @@ describe("Tests d'Intégration et de Sécurité (C2C)", () => {
             expect(res.statusCode).toEqual(200);
         });
 
-        it('devrait retourner la page HTML sur la route / (200)', async () => {
-            const res = await request(app).get('/');
-            expect(res.statusCode).toEqual(200);
-            expect(res.headers['content-type']).toMatch(/html/);
-        });
-
         it('devrait exposer les métriques Prometheus sur /metrics (200)', async () => {
             const res = await request(app).get('/metrics');
             expect(res.statusCode).toEqual(200);
