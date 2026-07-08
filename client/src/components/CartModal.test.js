@@ -20,7 +20,7 @@ describe('CartModal Component', () => {
     it('permet de retirer un article et de fermer la modale', () => {
         render(<CartModal cart={sampleCart} onClose={mockOnClose} onRemove={mockOnRemove} />);
 
-        expect(screen.getByText(/120.*€/)).toBeInTheDocument();
+        expect(screen.getAllByText(/120.*€/)[0]).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Retirer' }));
         expect(mockOnRemove).toHaveBeenCalledWith(1);
