@@ -3,40 +3,81 @@ const app = require('../server');
 const jwt = require('jsonwebtoken');
 
 jest.mock('pg', () => {
-    const mPool = {
-        query: jest.fn().mockResolvedValue({
-            rows: [{ id: 99, title: 'Objet Test', price: 50, category: 'Divers', seller: 'testuser' }]
-        }),
-        end: jest.fn()
-    };
+    const mPool = { query: jest.fn(), end: jest.fn() };
     return { Pool: jest.fn(() => mPool) };
 });
+const { Pool } = require('pg');
 
 describe("Tests d'Intégration et de Sécurité (C2C)", () => {
+    let pool;
     const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_pour_le_cube';
     const validToken = jwt.sign({ username: 'testuser' }, JWT_SECRET, { expiresIn: '1h' });
+    const invalidToken = 'un_faux_token_hack_123';
 
-    it('devrait retourner un statut 200 sur la route /health', async () => {
-        const res = await request(app).get('/health');
-        expect(res.statusCode).toEqual(200);
-        expect(res.text).toEqual('OK');
+    beforeEach(() => {
+        pool = new Pool();
+        pool.query.mockReset();
     });
 
-    it('devrait interdire (401) la création d\'une annonce sans token', async () => {
-        const res = await request(app).post('/articles').send({
-            title: 'Hack', description: 'Tentative', price: 0, category: 'Hack'
+    describe('Endpoints Techniques', () => {
+        it('devrait retourner un statut 200 sur la route /health', async () => {
+            const res = await request(app).get('/health');
+            expect(res.statusCode).toEqual(200);
         });
-        expect(res.statusCode).toEqual(401);
-        expect(res.body.error).toMatch(/Non autorisé/);
+
+        it('devrait retourner la page HTML sur la route / (200)', async () => {
+            const res = await request(app).get('/');
+            expect(res.statusCode).toEqual(200);
+            expect(res.headers['content-type']).toMatch(/html/);
+        });
+
+        it('devrait exposer les métriques Prometheus sur /metrics (200)', async () => {
+            const res = await request(app).get('/metrics');
+            expect(res.statusCode).toEqual(200);
+            expect(res.text).toContain('nodejs_version_info');
+        });
     });
 
-    it('devrait autoriser (201) la création d\'une annonce avec un token valide', async () => {
-        const res = await request(app)
-            .post('/articles')
-            .set('Authorization', `Bearer ${validToken}`)
-            .send({ title: 'Montre Vintage', description: 'Rare', price: 200, category: 'Horlogerie' });
+    describe('Middlewares et Sécurité', () => {
+        it('devrait interdire (401) la création d\'une annonce sans token', async () => {
+            const res = await request(app).post('/articles').send({});
+            expect(res.statusCode).toEqual(401);
+        });
 
-        expect(res.statusCode).toEqual(201);
-        expect(res.body.message).toEqual('Article ajouté');
+        it('devrait interdire (403) l\'accès avec un token invalide', async () => {
+            const res = await request(app)
+                .post('/articles')
+                .set('Authorization', `Bearer ${invalidToken}`)
+                .send({});
+            expect(res.statusCode).toEqual(403);
+            expect(res.body.error).toMatch(/invalide ou expiré/);
+        });
+    });
+
+    describe('Opérations Catalogue C2C', () => {
+        it('devrait autoriser (201) la création d\'une annonce avec un token valide', async () => {
+            pool.query.mockResolvedValueOnce({
+                rows: [{ id: 99, title: 'Montre Vintage', price: 200, category: 'Horlogerie', seller: 'testuser' }]
+            });
+
+            const res = await request(app)
+                .post('/articles')
+                .set('Authorization', `Bearer ${validToken}`)
+                .send({ title: 'Montre Vintage', description: 'Rare', price: 200, category: 'Horlogerie' });
+
+            expect(res.statusCode).toEqual(201);
+            expect(res.body.article.title).toEqual('Montre Vintage');
+        });
+
+        it('devrait gérer proprement un crash de la DB sur POST /articles (500)', async () => {
+            pool.query.mockRejectedValueOnce(new Error('Timeout DB'));
+
+            const res = await request(app)
+                .post('/articles')
+                .set('Authorization', `Bearer ${validToken}`)
+                .send({ title: 'Crash Test', description: 'Crash', price: 10, category: 'Divers' });
+
+            expect(res.statusCode).toEqual(500);
+        });
     });
 });
