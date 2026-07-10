@@ -130,19 +130,23 @@ app.get('/articles', async (req, res) => {
 });
 
 app.post('/articles', authMiddleware, async (req, res) => {
-    const { title, description, price, category } = req.body;
+    const { title, description, price, category, condition } = req.body;
+    const allowedConditions = ['Neuf', 'Très bon état', 'Usé', 'Non spécifié'];
+    if (condition && !allowedConditions.includes(condition)) {
+        return res.status(400).json({ error: "L'état spécifié pour l'objet est invalide" });
+    }
+    const articleCondition = condition || 'Non spécifié';
     const seller = req.user.username;
     try {
         const result = await pool.query(
-            'INSERT INTO articles (title, description, price, category, seller) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [title, description, price, category, seller]
+            'INSERT INTO articles (title, description, price, category, condition, seller) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [title, description, price, category, articleCondition, seller]
         );
         res.status(201).json({ message: 'Article ajouté', article: result.rows[0] });
     } catch (err) {
         res.status(500).json({ error: 'Erreur serveur lors de l\'ajout', detail: err.message });
     }
 });
-
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
 async function seedDemoUsers() {

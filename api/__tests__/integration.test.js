@@ -51,16 +51,33 @@ describe("Tests d'Intégration et de Sécurité (C2C)", () => {
     describe('Opérations Catalogue C2C', () => {
         it('devrait autoriser (201) la création d\'une annonce avec un token valide', async () => {
             pool.query.mockResolvedValueOnce({
-                rows: [{ id: 99, title: 'Montre Vintage', price: 200, category: 'Horlogerie', seller: 'testuser' }]
+                rows: [{ id: 99, title: 'Montre Vintage', price: 200, category: 'Horlogerie', condition: 'Très bon état', seller: 'testuser' }]
             });
 
             const res = await request(app)
                 .post('/articles')
                 .set('Authorization', `Bearer ${validToken}`)
-                .send({ title: 'Montre Vintage', description: 'Rare', price: 200, category: 'Horlogerie' });
+                .send({ title: 'Montre Vintage', description: 'Rare', price: 200, category: 'Horlogerie', condition: 'Très bon état' });
 
             expect(res.statusCode).toEqual(201);
             expect(res.body.article.title).toEqual('Montre Vintage');
+            expect(res.body.article.condition).toEqual('Très bon état');
+        });
+
+        it('devrait rejeter (400) la création si la condition de l\'objet est invalide', async () => {
+            const res = await request(app)
+                .post('/articles')
+                .set('Authorization', `Bearer ${validToken}`)
+                .send({
+                    title: 'Objet Suspect',
+                    description: 'Test',
+                    price: 50,
+                    category: 'Divers',
+                    condition: 'Complètement Détruit (Texte beaucoup trop long pour tester le VARCHAR)'
+                });
+
+            expect(res.statusCode).toEqual(400);
+            expect(res.body.error).toMatch(/L'état spécifié/);
         });
 
         it('devrait gérer proprement un crash de la DB sur POST /articles (500)', async () => {
@@ -69,8 +86,7 @@ describe("Tests d'Intégration et de Sécurité (C2C)", () => {
             const res = await request(app)
                 .post('/articles')
                 .set('Authorization', `Bearer ${validToken}`)
-                .send({ title: 'Crash Test', description: 'Crash', price: 10, category: 'Divers' });
-
+                .send({ title: 'Crash Test', description: 'Crash', price: 10, category: 'Divers', condition: 'Neuf' });
             expect(res.statusCode).toEqual(500);
         });
     });

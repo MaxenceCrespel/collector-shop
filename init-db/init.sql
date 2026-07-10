@@ -17,18 +17,30 @@ CREATE TABLE
         description TEXT,
         price DECIMAL(10, 2) NOT NULL,
         category VARCHAR(50),
+        condition VARCHAR(30) DEFAULT 'Non spécifié',
         seller VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+ALTER TABLE articles
+ADD COLUMN IF NOT EXISTS condition VARCHAR(30) DEFAULT 'Non spécifié';
+
 INSERT INTO
-    articles (title, description, price, category, seller)
+    articles (
+        title,
+        description,
+        price,
+        category,
+        condition,
+        seller
+    )
 VALUES
     (
         'Jordan 1 Retro High',
         'Édition limitée 1985, état neuf.',
         1200.00,
         'Baskets',
+        'Neuf',
         'sneakerhead75'
     ),
     (
@@ -36,6 +48,7 @@ VALUES
         'Originale 1979 sous blister.',
         450.00,
         'Figurines',
+        'Neuf',
         'starwars_collector'
     ),
     (
@@ -43,6 +56,7 @@ VALUES
         'Première édition française scellée.',
         150.00,
         'Vintage',
+        'Neuf',
         'retro_passion'
     ),
     (
@@ -50,6 +64,7 @@ VALUES
         'Édition spéciale jaune, parfait état.',
         220.00,
         'Jeux Vidéo',
+        'Très bon état',
         'pixel_hunter'
     ),
     (
@@ -57,6 +72,7 @@ VALUES
         'Set de base, holographique, Gradée 9 PSA.',
         2500.00,
         'Cartes',
+        'Très bon état',
         'pokemasterfr'
     ),
     (
@@ -64,6 +80,7 @@ VALUES
         'Réplique officielle auto-laçante (2011).',
         8500.00,
         'Baskets',
+        'Neuf',
         'sneakerhead75'
     ),
     (
@@ -71,6 +88,7 @@ VALUES
         'Signé par Mark Hamill, certifié.',
         600.00,
         'Autographes',
+        'Très bon état',
         'starwars_collector'
     ),
     (
@@ -78,6 +96,7 @@ VALUES
         'Modèle géant 60cm de 1978.',
         800.00,
         'Figurines',
+        'Usé',
         'retro_passion'
     ),
     (
@@ -85,6 +104,7 @@ VALUES
         'Version boîte originale (Gold Cartridge).',
         350.00,
         'Jeux Vidéo',
+        'Très bon état',
         'pixel_hunter'
     ),
     (
@@ -92,6 +112,7 @@ VALUES
         'Boîte d''origine, deux manettes et Zapper.',
         280.00,
         'Jeux Vidéo',
+        'Usé',
         'pixel_hunter'
     ),
     (
@@ -99,6 +120,7 @@ VALUES
         'Modèle fabriqué en France, années 70.',
         300.00,
         'Baskets',
+        'Usé',
         'sneakerhead75'
     ),
     (
@@ -106,6 +128,7 @@ VALUES
         'La mort de Gwen Stacy, bon état.',
         400.00,
         'Comics',
+        'Très bon état',
         'marvel_addict'
     ),
     (
@@ -113,6 +136,7 @@ VALUES
         'Neuf sous emballage d''origine.',
         90.00,
         'Vintage',
+        'Neuf',
         'retro_passion'
     ),
     (
@@ -120,6 +144,7 @@ VALUES
         'Le premier modèle avec radio, fonctionnel.',
         180.00,
         'Vintage',
+        'Usé',
         'retro_passion'
     ),
     (
@@ -127,6 +152,7 @@ VALUES
         'Signée par Todd McFarlane.',
         200.00,
         'Figurines',
+        'Neuf',
         'marvel_addict'
     ),
     (
@@ -134,6 +160,7 @@ VALUES
         'Édition Unlimited, état correct.',
         15000.00,
         'Cartes',
+        'Usé',
         'pokemasterfr'
     ),
     (
@@ -141,6 +168,7 @@ VALUES
         'Complet avec clavier et souris d''origine.',
         550.00,
         'Informatique',
+        'Très bon état',
         'retrotech'
     ),
     (
@@ -148,6 +176,7 @@ VALUES
         'Modèle de 1984, avec toutes les figurines.',
         450.00,
         'Lego',
+        'Usé',
         'brick_maniac'
     ),
     (
@@ -155,6 +184,7 @@ VALUES
         'Édition limitée Jeff Staple (2005).',
         12000.00,
         'Baskets',
+        'Neuf',
         'sneakerhead75'
     ),
     (
@@ -162,5 +192,6 @@ VALUES
         'Pressage original 1982, scellé.',
         250.00,
         'Musique',
+        'Neuf',
         'retro_passion'
     );

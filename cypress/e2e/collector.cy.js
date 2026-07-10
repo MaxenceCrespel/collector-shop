@@ -18,6 +18,7 @@ describe('Parcours C2C Collector.shop', () => {
 
     cy.get('input[placeholder="Ex: Jordan 1 Retro 1985"]').type(articleTitle);
     cy.get('input[placeholder="Ex: Baskets"]').type('Audio');
+    cy.get('select').select('Très bon état');
     cy.get('textarea[placeholder*="Décrivez votre objet"]').type('Parfait état de marche, son stéréo.');
     cy.get('input[placeholder="0.00"]').type('65.50');
 
