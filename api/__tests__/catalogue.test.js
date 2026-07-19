@@ -45,6 +45,6 @@ describe('GET /articles', () => {
 
     expect(res.statusCode).toEqual(500);
     expect(res.body.error).toEqual('Erreur serveur');
-    expect(res.body.detail).toEqual('Connexion à la base de données perdue');
+    expect(res.body.detail).toBeUndefined();
   });
 });

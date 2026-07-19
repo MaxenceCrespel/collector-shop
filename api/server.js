@@ -38,6 +38,10 @@ app.use((req, res, next) => {
 
 app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
+app.use((req, res, next) => {
+    if (!req.body) req.body = {};
+    next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
@@ -45,6 +49,8 @@ app.get('/', (req, res) => {
 });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const isValidCredentialString = (value) => typeof value === 'string' && !value.includes('\0');
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -71,7 +77,7 @@ app.get('/metrics', async (req, res) => {
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
+    if (!isValidCredentialString(username) || !isValidCredentialString(password)) {
         return res.status(400).json({ error: 'Identifiant et mot de passe requis' });
     }
     if (username.length < 3) {
@@ -96,14 +102,15 @@ app.post('/register', async (req, res) => {
         const token = jwt.sign({ username, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
         res.status(201).json({ token, username });
     } catch (err) {
-        res.status(500).json({ error: 'Erreur serveur', detail: err.message });
+        console.error('[ERROR]', err);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
+    if (!isValidCredentialString(username) || !isValidCredentialString(password)) {
         return res.status(400).json({ error: 'Identifiant et mot de passe requis' });
     }
 
@@ -122,7 +129,8 @@ app.post('/login', async (req, res) => {
         const token = jwt.sign({ username: user.username, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ token, username: user.username });
     } catch (err) {
-        res.status(500).json({ error: 'Erreur serveur', detail: err.message });
+        console.error('[ERROR]', err);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
@@ -133,7 +141,8 @@ app.get('/articles', async (req, res) => {
         console.log(`[INFO] Requête catalogue traitée en ${Date.now() - start}ms`);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Erreur serveur', detail: err.message });
+        console.error('[ERROR]', err);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
@@ -152,13 +161,19 @@ app.post('/articles', authMiddleware, async (req, res) => {
         );
         res.status(201).json({ message: 'Article ajouté', article: result.rows[0] });
     } catch (err) {
-        res.status(500).json({ error: 'Erreur serveur lors de l\'ajout', detail: err.message });
+        console.error('[ERROR]', err);
+        res.status(500).json({ error: 'Erreur serveur lors de l\'ajout' });
     }
 });
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Route non trouvée' });
+});
+
+app.use((err, req, res, next) => {
+    console.error('[ERROR]', err);
+    res.status(err.status || 500).json({ error: 'Erreur serveur' });
 });
 
 async function seedDemoUsers() {
