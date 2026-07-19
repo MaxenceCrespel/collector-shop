@@ -13,16 +13,28 @@ jobs:
         run: |
           docker compose up -d --build
           sleep 15
-      - name: Attaque dynamique (OWASP ZAP) via Docker
-        continue-on-error: true
+      - name: Récupération d'un token JWT pour le scan authentifié
+        run: |
+          curl -s -X POST http://localhost:3000/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"sneakerhead75","password":"collector2026"}' \
+            | python3 -c "import sys,json;print('AUTH_TOKEN='+json.load(sys.stdin)['token'])" >> "$GITHUB_ENV"
+      - name: Attaque dynamique (OWASP ZAP - scan actif) via Docker
         run: |
           mkdir -p zap-reports
           chmod 777 zap-reports
           docker run --rm --network host \
             -v $(pwd)/zap-reports:/zap/wrk/:rw \
             ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t http://localhost:3000 -r zap-report.html -I
+            zap-full-scan.py -t http://localhost:3000 -r zap-report.html -l WARN \
+            -z "-config replacer.full_list(0).description=auth \
+                -config replacer.full_list(0).enabled=true \
+                -config replacer.full_list(0).matchtype=REQ_HEADER \
+                -config replacer.full_list(0).matchstr=Authorization \
+                -config replacer.full_list(0).regex=false \
+                -config replacer.full_list(0).replacement='Bearer\ ${AUTH_TOKEN}'"
       - name: Sauvegarde du rapport ZAP (Upload V4)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-scan-report
