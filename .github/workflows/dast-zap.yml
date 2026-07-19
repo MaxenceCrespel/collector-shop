@@ -20,7 +20,6 @@ jobs:
             -d '{"username":"sneakerhead75","password":"collector2026"}' \
             | python3 -c "import sys,json;print('AUTH_TOKEN='+json.load(sys.stdin)['token'])" >> "$GITHUB_ENV"
       - name: Attaque dynamique (OWASP ZAP - scan actif) via Docker
-        continue-on-error: true
         run: |
           mkdir -p zap-reports
           chmod 777 zap-reports
@@ -36,7 +35,6 @@ jobs:
                 -config replacer.full_list(0).replacement='Bearer\ ${AUTH_TOKEN}'"
           echo "FULL_SCAN_EXIT=$?" >> "$GITHUB_ENV"
       - name: Attaque ciblée des endpoints API (OWASP ZAP - openapi) via Docker
-        continue-on-error: true
         run: |
           docker run --rm --network host \
             -v $(pwd)/zap-reports:/zap/wrk/:rw \
