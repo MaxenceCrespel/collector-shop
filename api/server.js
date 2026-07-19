@@ -148,6 +148,20 @@ app.get('/articles', async (req, res) => {
 
 app.post('/articles', authMiddleware, async (req, res) => {
     const { title, description, price, category, condition } = req.body;
+
+    if (typeof title !== 'string' || title.trim().length === 0 || title.length > 100) {
+        return res.status(400).json({ error: 'Le titre est requis et doit faire au plus 100 caractères' });
+    }
+    if (typeof description !== 'string' || description.trim().length === 0) {
+        return res.status(400).json({ error: 'La description est requise' });
+    }
+    if (typeof category !== 'string' || category.trim().length === 0 || category.length > 50) {
+        return res.status(400).json({ error: 'La catégorie est requise et doit faire au plus 50 caractères' });
+    }
+    if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0 || price > 99999999.99) {
+        return res.status(400).json({ error: 'Le prix doit être un nombre positif' });
+    }
+
     const allowedConditions = ['Neuf', 'Très bon état', 'Usé', 'Non spécifié'];
     if (condition && !allowedConditions.includes(condition)) {
         return res.status(400).json({ error: "L'état spécifié pour l'objet est invalide" });
