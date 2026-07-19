@@ -157,6 +157,10 @@ app.post('/articles', authMiddleware, async (req, res) => {
 });
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route non trouvée' });
+});
+
 async function seedDemoUsers() {
     const demoUsers = [
         'sneakerhead75', 'starwars_collector', 'retro_passion',
