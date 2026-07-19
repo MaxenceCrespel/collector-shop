@@ -22,7 +22,10 @@ app.use(helmet({
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
             formAction: ["'self'"],
-            frameAncestors: ["'self'"]
+            frameAncestors: ["'self'"],
+            manifestSrc: ["'self'"],
+            workerSrc: ["'none'"],
+            childSrc: ["'none'"]
         }
     },
     crossOriginEmbedderPolicy: true
