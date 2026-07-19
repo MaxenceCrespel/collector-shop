@@ -155,7 +155,7 @@ app.post('/articles', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur lors de l\'ajout', detail: err.message });
     }
 });
-app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Route non trouvée' });
