@@ -39,8 +39,10 @@ jobs:
           docker run --rm --network host \
             -v $(pwd)/zap-reports:/zap/wrk/:rw \
             -v $(pwd)/api/openapi.yaml:/zap/wrk/openapi.yaml:ro \
+            -v $(pwd)/.zap/api-scan-rules.conf:/zap/wrk/api-scan-rules.conf:ro \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-api-scan.py -t /zap/wrk/openapi.yaml -f openapi -r zap-api-report.html -l WARN \
+            -c /zap/wrk/api-scan-rules.conf \
             -z "-config replacer.full_list(0).description=auth \
                 -config replacer.full_list(0).enabled=true \
                 -config replacer.full_list(0).matchtype=REQ_HEADER \
